@@ -1,0 +1,76 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: cleanup
+spec:
+  description: >-
+    Cleans up the shared workspace by deleting all of its contents, including
+    hidden files, while keeping the workspace directory itself.
+  workspaces:
+    - name: source
+      description: The workspace to clean.
+  steps:
+    - name: remove
+      image: alpine:3
+      env:
+        - name: WORKSPACE_SOURCE_PATH
+          value: $(workspaces.source.path)
+      workingDir: $(workspaces.source.path)
+      securityContext:
+        runAsNonRoot: false
+        runAsUser: 0
+      script: |
+        #!/bin/sh
+        set -eu
+
+        TARGET="${WORKSPACE_SOURCE_PATH:-}"
+
+        if [ -z "${TARGET}" ]; then
+          echo "ERROR: WORKSPACE_SOURCE_PATH is empty; refusing to clean." >&2
+          exit 1
+        fi
+
+        # Refuse obviously dangerous paths so a misconfigured workspace can
+        # never wipe a system directory or the filesystem root.
+        case "${TARGET}" in
+          /|/bin|/boot|/dev|/etc|/home|/lib|/lib64|/opt|/proc|/root|/run|/sbin|/srv|/sys|/tmp|/usr|/var)
+            echo "ERROR: refusing to clean protected path '${TARGET}'." >&2
+            exit 1
+            ;;
+        esac
+
+        if [ ! -d "${TARGET}" ]; then
+          echo "ERROR: workspace '${TARGET}' is not a directory." >&2
+          exit 1
+        fi
+
+        echo "Removing all files from ${TARGET} ..."
+        cd "${TARGET}"
+        # Remove regular and hidden entries, but never the directory itself.
+        rm -rf -- ./* ./.[!.]* ./..?* 2>/dev/null || true
+        echo "Workspace ${TARGET} is now empty."
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: nose
+spec:
+  description: Runs the nose unit test suite for the application.
+  workspaces:
+    - name: source
+      description: The workspace containing the application source.
+  params:
+    - name: args
+      description: Arguments to pass to nosetests.
+      type: string
+      default: "-v"
+  steps:
+    - name: nosetests
+      image: python:3.9-slim
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/bin/bash
+        set -e
+        python -m pip install --upgrade pip wheel
+        pip install -r requirements.txt
+        nosetests $(params.args)

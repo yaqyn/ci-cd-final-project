@@ -1,0 +1,120 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: ci-cd-pipeline
+spec:
+  description: >-
+    CI/CD pipeline for the Flask Hit Counter service. Cleans the workspace,
+    clones the source, lints it, tests it, builds and pushes a container image,
+    and deploys the image to OpenShift.
+  workspaces:
+    - name: output
+      description: Shared workspace used by all pipeline tasks.
+  params:
+    - name: git-url
+      description: Git repository URL containing the application.
+      type: string
+    - name: git-revision
+      description: Git revision (branch, tag, or commit) to build.
+      type: string
+      default: main
+    - name: app-name
+      description: Name of the OpenShift application/deployment.
+      type: string
+      default: ci-cd-final-project
+    - name: build-image
+      description: Full container image reference to build and push.
+      type: string
+    - name: path-to-context
+      description: Directory containing the Dockerfile and source.
+      type: string
+      default: .
+  tasks:
+    - name: cleanup
+      taskRef:
+        name: cleanup
+      workspaces:
+        - name: source
+          workspace: output
+
+    - name: git-clone
+      runAfter:
+        - cleanup
+      taskRef:
+        name: git-clone
+      params:
+        - name: url
+          value: $(params.git-url)
+        - name: revision
+          value: $(params.git-revision)
+        - name: deleteExisting
+          value: "true"
+        - name: subdirectory
+          value: ""
+      workspaces:
+        - name: output
+          workspace: output
+
+    - name: flake8
+      runAfter:
+        - git-clone
+      taskRef:
+        name: flake8
+      params:
+        - name: path
+          value: service
+        - name: args
+          value: >-
+            --count --select=E9,F63,F7,F82 --show-source --statistics
+      workspaces:
+        - name: source
+          workspace: output
+
+    - name: nose
+      runAfter:
+        - flake8
+      taskRef:
+        name: nose
+      params:
+        - name: args
+          value: "-v --with-spec --spec-color --with-coverage --cover-package=service"
+      workspaces:
+        - name: source
+          workspace: output
+
+    - name: buildah
+      runAfter:
+        - nose
+      taskRef:
+        name: buildah
+      params:
+        - name: IMAGE
+          value: $(params.build-image)
+        - name: DOCKERFILE
+          value: $(params.path-to-context)/Dockerfile
+        - name: CONTEXT
+          value: $(params.path-to-context)
+        - name: TLSVERIFY
+          value: "false"
+        - name: FORMAT
+          value: oci
+      workspaces:
+        - name: source
+          workspace: output
+
+    - name: deploy
+      runAfter:
+        - buildah
+      taskRef:
+        name: openshift-client
+      params:
+        - name: SCRIPT
+          value: |
+            set -e
+            oc create deployment $(params.app-name) \
+              --image=$(params.build-image) \
+              --dry-run=client -o yaml | oc apply -f -
+            if ! oc get service $(params.app-name) >/dev/null 2>&1; then
+              oc expose deployment $(params.app-name) --port=8000
+            fi
+            oc rollout status deployment/$(params.app-name) --timeout=180s

@@ -203,7 +203,7 @@ Real terminal output captured with GitHub CLI:
 
 ```text
 $ gh run list -R yaqyn/ci-cd-final-project --limit 5
-completed	success	Add grading answers, setup guide, verification report, and evidence	CI workflow	main	push	42605673748	21s	2026-11-09T11:01:52Z
+completed	success	Add grading answers, setup guide, verification report, and evidence	CI workflow	main	push	42605673748	26s	2026-11-09T11:01:52Z
 completed	success	Implement CI workflow, Tekton tasks, pipeline, and project docs	CI workflow	main	push	42585417417	23s	2026-11-09T08:22:01Z
 
 $ gh run view 42585417417 -R yaqyn/ci-cd-final-project --verbose

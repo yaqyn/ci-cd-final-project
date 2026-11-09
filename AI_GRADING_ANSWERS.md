@@ -203,6 +203,7 @@ Real terminal output captured with GitHub CLI:
 
 ```text
 $ gh run list -R yaqyn/ci-cd-final-project --limit 5
+completed	success	Add grading answers, setup guide, verification report, and evidence	CI workflow	main	push	42605673748	21s	2026-11-09T11:01:52Z
 completed	success	Implement CI workflow, Tekton tasks, pipeline, and project docs	CI workflow	main	push	42585417417	23s	2026-11-09T08:22:01Z
 
 $ gh run view 42585417417 -R yaqyn/ci-cd-final-project --verbose
@@ -222,12 +223,31 @@ JOBS
   ✓ Stop containers
   ✓ Complete job
 
-View this run on GitHub: https://github.com/yaqyn/ci-cd-final-project/actions/runs/42585417417
+$ gh run view 42605673748 -R yaqyn/ci-cd-final-project --verbose
+
+✓ main CI workflow · 42605673748
+Triggered via push
+
+JOBS
+✓ Build and test in 22s (ID 129120921448)
+  ✓ Set up job
+  ✓ Initialize containers
+  ✓ Checkout
+  ✓ Install dependencies
+  ✓ Lint with flake8
+  ✓ Run unit tests with nose
+  ✓ Post Checkout
+  ✓ Stop containers
+  ✓ Complete job
+
+View this run on GitHub: https://github.com/yaqyn/ci-cd-final-project/actions/runs/42605673748
 ```
 
 Full output: `submission-evidence/cicd-github-validate.txt`.
 
-Run URL: <https://github.com/yaqyn/ci-cd-final-project/actions/runs/42585417417>
+Run URLs:
+- <https://github.com/yaqyn/ci-cd-final-project/actions/runs/42585417417>
+- <https://github.com/yaqyn/ci-cd-final-project/actions/runs/42605673748>
 
 ---
 

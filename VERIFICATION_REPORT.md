@@ -175,7 +175,17 @@ Result: **PASS**
   ✓ Complete job
 ```
 
-Run URL: <https://github.com/yaqyn/ci-cd-final-project/actions/runs/42585417417>
+Second successful run after the documentation commit:
+
+```text
+✓ main CI workflow · 42605673748
+✓ Build and test in 22s
+  ✓ Checkout / Install dependencies / Lint with flake8 / Run unit tests with nose
+```
+
+Run URLs:
+- <https://github.com/yaqyn/ci-cd-final-project/actions/runs/42585417417>
+- <https://github.com/yaqyn/ci-cd-final-project/actions/runs/42605673748>
 
 Raw output: `submission-evidence/cicd-github-validate.txt`.
 

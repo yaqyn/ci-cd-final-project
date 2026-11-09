@@ -1,0 +1,55 @@
+# Tekton validation — local minikube (not OpenShift)
+# Cluster: minikube v1.35.1, Tekton Pipelines v1.6.0
+# Date: 2026-11-09T11:00:32Z
+
+$ kubectl apply -f .tekton/tasks.yml
+task.tekton.dev/cleanup configured
+task.tekton.dev/nose configured
+
+$ kubectl apply -f .tekton/pipeline.yml
+pipeline.tekton.dev/ci-cd-pipeline configured
+
+$ kubectl get tasks
+NAME      AGE
+cleanup   139m
+nose      139m
+
+$ kubectl get pipelines
+NAME             AGE
+ci-cd-pipeline   8s
+
+$ kubectl get taskruns
+NAME          SUCCEEDED   REASON      STARTTIME   COMPLETIONTIME
+cleanup-run   True        Succeeded   3m8s        3m1s
+nose-run      True        Succeeded   106s        20s
+
+$ kubectl logs cleanup-run-pod -c step-remove
+Removing all files from /workspace/source ...
+Workspace /workspace/source is now empty.
+
+$ kubectl logs nose-run-pod -c step-nosetests | tail -20
+- It should List counters
+- It should Read a counter
+- It should Update a counter
+- It should not Update a missing counter
+/usr/local/lib/python3.9/site-packages/coverage/inorout.py:519: CoverageWarning: Module app was never imported. (module-not-imported)
+  self.warn(f"Module {pkg} was never imported.", slug="module-not-imported")
+
+Name                             Stmts   Miss  Cover   Missing
+--------------------------------------------------------------
+service/__init__.py                  8      0   100%
+service/common/log_handlers.py      11      1    91%   37
+service/common/status.py            45      0   100%
+service/routes.py                   48      0   100%
+--------------------------------------------------------------
+TOTAL                              112      1    99%
+----------------------------------------------------------------------
+Ran 9 tests in 0.193s
+
+OK
+
+
+$ kubectl get pvc
+NAME                  STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+synergychat-api-pvc   Bound    pvc-9616df38-3162-4ff5-91c6-ed7e971df3e4   1Gi        RWO            standard       <unset>                 22d
+tekton-workspace      Bound    pvc-9696e3c2-c234-459a-ba78-866b260c38e9   1Gi        RWO            standard       <unset>                 139m

@@ -65,7 +65,7 @@ pip install -r requirements.txt
 ### Run the service
 
 ```bash
-flask --app service run --port 8000
+FLASK_APP=service flask run --port 8000
 # or
 gunicorn --bind 0.0.0.0:8000 service:app
 ```

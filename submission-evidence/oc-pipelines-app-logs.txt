@@ -1,0 +1,22 @@
+STATUS: PENDING — OpenShift cluster access not available
+
+No OpenShift cluster, `oc` CLI, or `tkn` CLI was available in the environment
+where this project was prepared. Therefore no application logs could be
+retrieved from an OpenShift deployment, and this file intentionally contains no
+simulated or invented log entries.
+
+The application itself was verified locally in the built container image and
+emitted the required "S E R V I C E   R U N N I N G" banner. That local log is
+kept separately at:
+
+  submission-evidence/local-app-startup.log
+
+To capture the required OpenShift evidence after deploying the pipeline, run:
+
+  oc logs deployment/ci-cd-final-project | tee submission-evidence/oc-pipelines-app-logs.txt
+
+Expected content includes:
+
+  ******************  S E R V I C E   R U N N I N G  *******************
+
+See SETUP_AND_DEPLOYMENT.md section 4 for the full manual evidence procedure.
